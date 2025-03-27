@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galleria Fotografica</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: #ffe6f2;
+            color: #ff69b4;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .hello-kitty {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 100px;
+        }
+        h1 {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 28px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: 4px solid #ff69b4;
+        }
+        input[type="file"], button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            background-color: #ffb6c1;
+        }
+        button {
+            background-color: #ff69b4;
+            color: white;
+        }
+        button:hover {
+            background-color: #ff1493;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Valentina's Gallery</h1>
+        <img src="https://www.icegif.com/wp-content/uploads/2023/09/icegif-516.gif" alt="Hello Kitty Dancing" class="hello-kitty">
+        <input type="file" id="fileInput" multiple accept="image/*">
+        <button id="clearGallery">Cancella Galleria</button>
+        <div class="gallery" id="gallery"></div>
+    </div>
+
+    <script>
+        const IMGBB_API_KEY = "0a040871083db46667bfdb67a4435151"; // Sostituisci con la tua API Key di ImgBB
+        let savedImages = JSON.parse(localStorage.getItem("gallery")) || [];
+
+        // Carica le immagini salvate all'avvio
+        document.addEventListener("DOMContentLoaded", function() {
+            loadImages();
+        });
+
+        // Caricamento immagini su ImgBB
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+
+            for (let file of files) {
+                const formData = new FormData();
+                formData.append("image", file);
+
+                fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data && data.data.url) {
+                        savedImages.push(data.data.url);
+                        localStorage.setItem("gallery", JSON.stringify(savedImages));
+                        addImageToGallery(data.data.url);
+                    }
+                })
+                .catch(error => console.error("Errore nel caricamento:", error));
+            }
+        });
+
+        // Funzione per caricare le immagini salvate
+        function loadImages() {
+            const gallery = document.getElementById("gallery");
+            gallery.innerHTML = "";
+            savedImages.forEach(src => addImageToGallery(src));
+        }
+
+        // Aggiunge un'immagine alla galleria
+        function addImageToGallery(src) {
+            const img = document.createElement("img");
+            img.src = src;
+            document.getElementById("gallery").appendChild(img);
+        }
+
+        // Pulsante per cancellare la galleria
+        document.getElementById('clearGallery').addEventListener('click', function() {
+            savedImages = [];
+            localStorage.removeItem("gallery");
+            document.getElementById('gallery').innerHTML = "";
+        });
+    </script>
+</body>
+</html>
